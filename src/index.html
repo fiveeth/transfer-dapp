@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Transfer</title>
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-12 col-sm-8 col-sm-push-2">
+          <h1 class="text-center">Transfer</h1>
+          <hr/>
+          <h2 class="text-center" id="env"></h2>
+          <hr/>
+          <h2 class="text-center" id="account"></h2>
+          <br/>
+        </div>
+      </div>
+
+      <div>
+          <div class="form-group">
+            <label for="source">源账号</label>
+            <input type="text" class="form-control" id="source" placeholder="源账号">
+          </div>
+          <div class="form-group">
+            <label for="target">目标账号</label>
+            <input type="text" class="form-control" id="target" placeholder="目标账号">
+          </div>
+          <div class="form-group">
+            <label for="amount">金额(Ether)</label>
+            <input type="number" class="form-control" id="amount" placeholder="金额(Ether)">
+          </div>
+          <div class="form-group">
+            <label for="gasLimit">Gas limit(gas)</label>
+            <input type="number" class="form-control" id="gasLimit" placeholder="Gas limit(gas)">
+          </div>
+          <div class="form-group">
+            <label for="gasPrice">Gas价格(GWei)</label>
+            <input type="number" class="form-control" id="gasPrice" placeholder="Gas价格(GWei)">
+          </div>
+          <button class="btn btn-default" onclick="sendTransaction()">发 送</button>
+      </div>
+    </div>
+    <div id="transactionResponse"></div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/web3.min.js"></script>
+
+    <script type="text/javascript">
+      $(function() {
+        if(typeof web3 !== 'undefined') {
+          web3 = new Web3(web3.currentProvider);
+          if(web3.currentProvider.isMetaMask) {
+            $("#env").html("MetaMask可用");
+          } else {
+            $("#env").html("非MetaMask环境");
+          }
+        } else {
+          $("#env").html("No web3? 需要安装<a href='https://metamask.io/'>MetaMask</a>!");
+        }
+
+        web3.eth.getAccounts(function (err, accounts) {
+          console.log(accounts);
+          if (accounts.length == 0) {
+            $("#account").html("请检查钱包是否解锁");
+          } else {
+            $("#account").html("钱包已解锁");
+          }
+        });
+      })
+
+      function sendTransaction() {
+        var fromAccount = $('#source').val();
+        var toAccount = $('#target').val();
+        var amount = $('#amount').val();
+        var gas = $('#gasLimit').val();
+        var gasPrice = $('#gasPrice').val();
+
+        // Use for example 2
+        if (web3.isAddress(fromAccount) && web3.isAddress(toAccount) && amount != null && amount.length > 0 &&
+            gas != null && gas.length > 0 && gasPrice != null && gasPrice.length > 0 ) {
+            // Example 1: 使用Metamask 给的gas Limit 及 gas 价
+            // var message = {from: fromAccount, to:toAccount, value: web3.toWei(amount, 'ether')};
+
+            // Example 2: 自动指定以gas
+            gasPrice =  gasPrice * 1000000000;
+            var message = {from: fromAccount, to:toAccount, value: web3.toWei(amount, 'ether'),
+            gas: gas, gasPrice: gasPrice};
+
+            // Example 3: 使用默认账号
+            // web3.eth.defaultAccount = fromAccount;
+            // var message = {to:toAccount, value: web3.toWei(amount, 'ether')};
+
+            web3.eth.sendTransaction(message, (err, res) => {
+              var output = "";
+              if (!err) {
+                  output += res;
+              } else {
+                  output = "Error";
+              }
+              document.getElementById('transactionResponse').innerHTML = "Transaction response= " + output + "<br />";
+            })
+        } else {
+            console.log("input error");
+        }
+      }
+    </script>
+  </body>
+</html>
